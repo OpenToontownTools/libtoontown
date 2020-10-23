@@ -170,6 +170,9 @@ NodePath DNASignBaseline::traverse(NodePath &parent, DNAStorage *store, int edit
   LVector3f pos = _pos;
   LVector3f hpr = _hpr;
   center(pos, hpr);
+  
+  // We need to keep this disabled on the text itself for dropshadows
+  signBaseline_node_path.set_depth_write(0);
 
   // Place the signBaseline on the sign:
   signBaseline_node_path.set_pos_hpr_scale(parent,
