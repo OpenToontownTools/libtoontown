@@ -54,13 +54,21 @@ NodePath DNASign::traverse(NodePath &parent, DNAStorage *store, int editing) {
     building_front = parent.find("**/*_front");
   }
 
-  nassertr(!building_front.is_empty(), parent);
-
-  // If the _front is not a GeomNode, look for the first geom node under that
-  if (!building_front.node()->is_geom_node()) {
-    building_front = building_front.find("**/+GeomNode");
-    nassertr(!building_front.is_empty(), parent);
+  // Polygon didn't add *_front nodes to AA / YOTT models, so we gotta do this. 
+  if (building_front.is_empty()) {
+      dna_cat.warning()
+          << "Whoops. Someone didnt add a _front node! in "<<parent.get_name()<<" Falling back to the main node \n";
+      building_front = parent;
   }
+  else {
+      // If the _front is not a GeomNode, look for the first geom node under that
+      if (!building_front.node()->is_geom_node()) {
+          building_front = building_front.find("**/+GeomNode");
+          nassertr(!building_front.is_empty(), parent);
+      }
+  }
+
+  nassertr(!building_front.is_empty(), parent);
 
   PandaNode *node = building_front.node();
   node->set_effect(DecalEffect::make());
@@ -83,7 +91,9 @@ NodePath DNASign::traverse(NodePath &parent, DNAStorage *store, int editing) {
   // Turn off the writing of z-buffer information:
   sign_node_path.set_depth_write(0);
 #endif
-
+  
+  // Offset it by 1 to prevent flickering with the windows
+  sign_node_path.set_depth_offset(1);
   //sign_node_path.node()->set_name("sign");
 
   // The Sign_origin is a special node in the model with a local
