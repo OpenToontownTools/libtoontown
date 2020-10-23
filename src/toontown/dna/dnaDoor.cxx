@@ -86,12 +86,21 @@ NodePath DNADoor::traverse(NodePath &parent, DNAStorage *store, int editing) {
   // Make this a decal onto the wall
   // It should be the only geom node under a group ending with _front
   NodePath building_front = parent.find("**/*_front");
-  nassertr(!building_front.is_empty(), parent);
-  // If the _front is not a GeomNode, look for the first geom node under that
-  if (!building_front.node()->is_geom_node()) {
-    building_front = building_front.find("**/+GeomNode");
-    nassertr(!building_front.is_empty(), parent);
+
+  // Polygon didn't add *_front nodes to AA / YOTT models, so we gotta do this
+  if (building_front.is_empty()) {
+      dna_cat.warning()
+          << "Whoops. Someone didnt add a _front node! in "<<parent.get_name()<<" Falling back to the main node \n";
+      building_front = parent;
   }
+  else {
+      // If the _front is not a GeomNode, look for the first geom node under that
+      if (!building_front.node()->is_geom_node()) {
+          building_front = building_front.find("**/+GeomNode");
+          nassertr(!building_front.is_empty(), parent);
+      }
+  }
+  nassertr(!building_front.is_empty(), parent);
 
   PandaNode *node = building_front.node();
   node->set_effect(DecalEffect::make());
